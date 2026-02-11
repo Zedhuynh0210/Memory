@@ -70,7 +70,7 @@ const swaggerOptions = {
     servers: [
       {
         // Khi deploy: set BASE_URL trên Render, ví dụ https://my-api.onrender.com
-        url: process.env.BASE_URL || 'http://localhost:5000',
+        url: process.env.BASE_URL,
         description: 'API server',
       },
     ],
