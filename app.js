@@ -14,21 +14,33 @@ var authRoute = require('./routes/authRoute');
 var memoryRoute = require('./routes/memoryRoute');
 
 var app = express();
-const connect = mongoose.connect(process.env.MONGO_URI);
-connect.then(async () => {
-  console.log("Connected correctly to server");
 
-  // Đồng bộ 2 tài khoản mặc định cho model Auth
-  try {
-    await Auth.syncDefaultUsers();
-    console.log("Synced default Auth users (2 tài khoản mặc định).");
-  } catch (err) {
-    console.error("Error syncing default Auth users:", err);
-  }
-});
+// Kết nối MongoDB (dùng MONGO_URI từ env). Khi deploy trên Render,
+// cần set đúng biến MONGO_URI trong dashboard.
+if (!process.env.MONGO_URI) {
+  console.error("MONGO_URI is not set. Please configure it in environment variables.");
+} else {
+  const connect = mongoose.connect(process.env.MONGO_URI);
+  connect
+    .then(async () => {
+      console.log("Connected correctly to server");
+
+      // Đồng bộ 2 tài khoản mặc định cho model Auth
+      try {
+        await Auth.syncDefaultUsers();
+        console.log("Synced default Auth users (2 tài khoản mặc định).");
+      } catch (err) {
+        console.error("Error syncing default Auth users:", err);
+      }
+    })
+    .catch((err) => {
+      console.error("Error connecting to MongoDB:", err);
+    });
+}
 
 const corsOptions = {
-  origin: 'http://localhost:5173', 
+  // Khi deploy: set FRONTEND_URL trên Render, ví dụ https://my-frontend.onrender.com
+  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,
@@ -56,7 +68,11 @@ const swaggerOptions = {
       description: 'API documentation for memory project',
     },
     servers: [
-      { url: 'http://localhost:5000', description: 'Local server' }
+      {
+        // Khi deploy: set BASE_URL trên Render, ví dụ https://my-api.onrender.com
+        url: process.env.BASE_URL || 'http://localhost:5000',
+        description: 'API server',
+      },
     ],
     components: {
       securitySchemes: {
