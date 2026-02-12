@@ -83,17 +83,14 @@ router.post(
  * @swagger
  * /memories:
  *   get:
- *     summary: Lấy danh sách tất cả kỷ niệm
+ *     summary: Lấy danh sách tất cả kỷ niệm (public, không cần token)
  *     tags: [Memories]
- *     security:
- *       - bearerAuth: []
+ *     security: []
  *     responses:
  *       200:
  *         description: Danh sách kỷ niệm
- *       401:
- *         description: Không có hoặc token không hợp lệ
  */
-router.get('/', authMiddleware, memoryController.getMemories);
+router.get('/', memoryController.getMemories);
 
 /**
  * @swagger
@@ -146,10 +143,9 @@ router.get('/dashboard', authMiddleware, memoryController.getMyMemoriesDashboard
  * @swagger
  * /memories/filter:
  *   get:
- *     summary: Lọc kỷ niệm theo location, authorName, mood và ngày tạo
+ *     summary: Lọc kỷ niệm theo location, authorName, mood và ngày tạo (public, không cần token)
  *     tags: [Memories]
- *     security:
- *       - bearerAuth: []
+ *     security: []
  *     parameters:
  *       - in: query
  *         name: location
@@ -193,19 +189,16 @@ router.get('/dashboard', authMiddleware, memoryController.getMyMemoriesDashboard
  *     responses:
  *       200:
  *         description: Danh sách kỷ niệm sau khi lọc
- *       401:
- *         description: Không có hoặc token không hợp lệ
  */
-router.get('/filter', authMiddleware, memoryController.filterMemories);
+router.get('/filter', memoryController.filterMemories);
 
 /**
  * @swagger
  * /memories/{id}:
  *   get:
- *     summary: Lấy chi tiết một kỷ niệm theo id
+ *     summary: Lấy chi tiết một kỷ niệm theo id (public, không cần token)
  *     tags: [Memories]
- *     security:
- *       - bearerAuth: []
+ *     security: []
  *     parameters:
  *       - in: path
  *         name: id
@@ -218,8 +211,6 @@ router.get('/filter', authMiddleware, memoryController.filterMemories);
  *         description: Chi tiết kỷ niệm
  *       404:
  *         description: Không tìm thấy kỷ niệm
- *       401:
- *         description: Không có hoặc token không hợp lệ
  *   put:
  *     summary: Cập nhật kỷ niệm theo id (có thể upload ảnh mới)
  *     tags: [Memories]
@@ -280,7 +271,7 @@ router.get('/filter', authMiddleware, memoryController.filterMemories);
  *       401:
  *         description: Không có hoặc token không hợp lệ
  */
-router.get('/:id', authMiddleware, memoryController.getMemoryById);
+router.get('/:id', memoryController.getMemoryById);
 router.put(
   '/:id',
   authMiddleware,
