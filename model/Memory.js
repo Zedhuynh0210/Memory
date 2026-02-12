@@ -10,9 +10,9 @@ const memorySchema = new mongoose.Schema({
     type: String, 
     required: [true, 'Đừng quên viết vài dòng cảm xúc nhé'] 
   },
-  imageUrl: { 
-    type: String, 
-    required: [true, 'Một tấm ảnh sẽ giúp kỷ niệm sống động hơn'] 
+  imageUrls: {
+    type: [String],
+    required: [true, 'Một hoặc nhiều tấm ảnh sẽ giúp kỷ niệm sống động hơn'],
   },
   location: { 
     type: String, // Ví dụ: "Đà Lạt", "Quán cafe quen"

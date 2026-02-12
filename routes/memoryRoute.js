@@ -34,7 +34,7 @@ const uploadMemoryImage = multer({
  * @swagger
  * /memories:
  *   post:
- *     summary: Tạo kỷ niệm mới (có upload ảnh)
+ *     summary: Tạo kỷ niệm mới (upload nhiều ảnh)
  *     tags: [Memories]
  *     security:
  *       - bearerAuth: []
@@ -47,7 +47,7 @@ const uploadMemoryImage = multer({
  *             required:
  *               - title
  *               - description
- *               - image
+ *               - images
  *             properties:
  *               title:
  *                 type: string
@@ -61,9 +61,11 @@ const uploadMemoryImage = multer({
  *               mood:
  *                 type: string
  *                 example: 😊
- *               image:
- *                 type: string
- *                 format: binary
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       201:
  *         description: Tạo kỷ niệm thành công
@@ -75,7 +77,7 @@ const uploadMemoryImage = multer({
 router.post(
   '/',
   authMiddleware,
-  uploadMemoryImage.single('image'),
+  uploadMemoryImage.array('images', 10),
   memoryController.createMemory
 );
 
@@ -212,7 +214,7 @@ router.get('/filter', memoryController.filterMemories);
  *       404:
  *         description: Không tìm thấy kỷ niệm
  *   put:
- *     summary: Cập nhật kỷ niệm theo id (có thể upload ảnh mới)
+ *     summary: Cập nhật kỷ niệm theo id (có thể upload NHIỀU ảnh mới)
  *     tags: [Memories]
  *     security:
  *       - bearerAuth: []
@@ -241,9 +243,11 @@ router.get('/filter', memoryController.filterMemories);
  *               status:
  *                 type: string
  *                 enum: [Nháp, Hoàn thành, Đã xoá]
- *               image:
- *                 type: string
- *                 format: binary
+ *               images:
+ *                 type: array
+ *                 items:
+ *                   type: string
+ *                   format: binary
  *     responses:
  *       200:
  *         description: Cập nhật kỷ niệm thành công
@@ -275,7 +279,7 @@ router.get('/:id', memoryController.getMemoryById);
 router.put(
   '/:id',
   authMiddleware,
-  uploadMemoryImage.single('image'),
+  uploadMemoryImage.array('images', 10),
   memoryController.updateMemory
 );
 router.delete('/:id', authMiddleware, memoryController.deleteMemory);

@@ -3,7 +3,7 @@ const fs = require("fs");
 const path = require("path");
 
 // POST /memories
-// Tạo kỷ niệm mới, upload ảnh và lưu đường dẫn vào imageUrl
+// Tạo kỷ niệm mới, upload NHIỀU ảnh và lưu đường dẫn vào imageUrls
 exports.createMemory = async (req, res) => {
   const user = req.user;
 
@@ -21,20 +21,22 @@ exports.createMemory = async (req, res) => {
     });
   }
 
-  if (!req.file) {
+  if (!req.files || req.files.length === 0) {
     return res.status(400).json({
       message:
-        "Thiếu file ảnh kỷ niệm (multipart/form-data, field name: image)",
+        "Thiếu file ảnh kỷ niệm (multipart/form-data, field name: images)",
     });
   }
 
-  const imageUrl = `/uploads/memories/${req.file.filename}`;
+  const imageUrls = req.files.map(
+    (file) => `/uploads/memories/${file.filename}`
+  );
 
   try {
     const memory = await Memory.create({
       title,
       description,
-      imageUrl,
+      imageUrls,
       location,
       mood,
       authorName: user.name || user.username,
@@ -244,7 +246,7 @@ exports.getMemoryById = async (req, res) => {
 };
 
 // PUT /memories/:id
-// Cập nhật kỷ niệm, có thể kèm hoặc không kèm ảnh mới
+// Cập nhật kỷ niệm, có thể kèm hoặc không kèm ảnh mới (và thay toàn bộ danh sách ảnh nếu upload nhiều ảnh)
 exports.updateMemory = async (req, res) => {
   const { id } = req.params;
   const { title, description, location, mood, status } = req.body;
@@ -262,22 +264,28 @@ exports.updateMemory = async (req, res) => {
     if (mood !== undefined) memory.mood = mood;
     if (status !== undefined) memory.status = status;
 
-    // Nếu có ảnh mới, cập nhật imageUrl và (tuỳ chọn) xoá file cũ
-    if (req.file) {
-      const oldImagePath =
-        memory.imageUrl && memory.imageUrl.startsWith("/uploads/memories/")
-          ? path.join(__dirname, "..", "public", memory.imageUrl)
-          : null;
+    // Nếu có upload nhiều ảnh mới, thay toàn bộ danh sách ảnh và xoá hết file ảnh cũ
+    if (req.files && req.files.length > 0) {
+      const oldImageUrls = Array.isArray(memory.imageUrls)
+        ? memory.imageUrls
+        : [];
 
-      memory.imageUrl = `/uploads/memories/${req.file.filename}`;
+      const newImageUrls = req.files.map(
+        (file) => `/uploads/memories/${file.filename}`
+      );
+      memory.imageUrls = newImageUrls;
 
-      if (oldImagePath) {
-        fs.unlink(oldImagePath, (err) => {
-          if (err) {
-            console.warn("Không xoá được file ảnh cũ:", err.message);
-          }
-        });
-      }
+      // Xoá toàn bộ file ảnh cũ
+      oldImageUrls.forEach((url) => {
+        if (url && url.startsWith("/uploads/memories/")) {
+          const fullPath = path.join(__dirname, "..", "public", url);
+          fs.unlink(fullPath, (err) => {
+            if (err) {
+              console.warn("Không xoá được file ảnh cũ:", err.message);
+            }
+          });
+        }
+      });
     }
 
     await memory.save();
@@ -306,20 +314,23 @@ exports.deleteMemory = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy kỷ niệm" });
     }
 
-    const imagePath =
-      memory.imageUrl && memory.imageUrl.startsWith("/uploads/memories/")
-        ? path.join(__dirname, "..", "public", memory.imageUrl)
-        : null;
+    const imagePaths =
+      Array.isArray(memory.imageUrls) && memory.imageUrls.length > 0
+        ? memory.imageUrls
+        : [];
 
     await Memory.findByIdAndDelete(id);
 
-    if (imagePath) {
-      fs.unlink(imagePath, (err) => {
-        if (err) {
-          console.warn("Không xoá được file ảnh:", err.message);
-        }
-      });
-    }
+    imagePaths.forEach((url) => {
+      if (url && url.startsWith("/uploads/memories/")) {
+        const fullPath = path.join(__dirname, "..", "public", url);
+        fs.unlink(fullPath, (err) => {
+          if (err) {
+            console.warn("Không xoá được file ảnh:", err.message);
+          }
+        });
+      }
+    });
 
     return res.json({ message: "Xoá kỷ niệm thành công" });
   } catch (err) {
