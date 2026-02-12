@@ -68,6 +68,50 @@ exports.getMemories = async (req, res) => {
   }
 };
 
+// GET /memories/status/draft
+// Lấy danh sách kỷ niệm ở trạng thái "Nháp" của user hiện tại (cần token)
+exports.getDraftMemories = async (req, res) => {
+  const user = req.user;
+
+  if (!user) {
+    return res
+      .status(401)
+      .json({ message: "Unauthorized - missing user from token" });
+  }
+
+  const authorName = user.name || user.username;
+
+  try {
+    const memories = await Memory.find({
+      authorName,
+      status: "Nháp",
+    }).sort({ createdAt: -1 });
+
+    return res.json({ memories });
+  } catch (err) {
+    console.error("Lỗi khi lấy danh sách kỷ niệm Nháp:", err);
+    return res
+      .status(500)
+      .json({ message: "Lỗi server khi lấy danh sách kỷ niệm Nháp" });
+  }
+};
+
+// GET /memories/status/completed
+// Lấy danh sách kỷ niệm ở trạng thái "Hoàn thành" (public, không cần token)
+exports.getCompletedMemories = async (req, res) => {
+  try {
+    const memories = await Memory.find({ status: "Hoàn thành" }).sort({
+      createdAt: -1,
+    });
+    return res.json({ memories });
+  } catch (err) {
+    console.error("Lỗi khi lấy danh sách kỷ niệm Hoàn thành:", err);
+    return res
+      .status(500)
+      .json({ message: "Lỗi server khi lấy danh sách kỷ niệm Hoàn thành" });
+  }
+};
+
 // GET /memories/filter
 // Lọc kỷ niệm theo location, authorName, mood và khoảng ngày (createdAt)
 exports.filterMemories = async (req, res) => {
@@ -204,6 +248,10 @@ exports.getMyMemoriesDashboard = async (req, res) => {
       statusStats[item._id || "Khác"] = item.count;
     });
 
+    // Thống kê riêng số lượng Nháp và Hoàn thành
+    const draftCount = statusStats["Nháp"] || 0;
+    const completedCount = statusStats["Hoàn thành"] || 0;
+
     const monthlyStats = monthlyAgg.map((item) => ({
       year: item._id.year,
       month: item._id.month,
@@ -213,6 +261,8 @@ exports.getMyMemoriesDashboard = async (req, res) => {
     return res.json({
       authorName,
       totalMemories: totalCount,
+      draftMemories: draftCount,
+      completedMemories: completedCount,
       byStatus: statusStats,
       byMonth: monthlyStats,
     });

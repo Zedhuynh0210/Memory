@@ -96,6 +96,39 @@ router.get('/', memoryController.getMemories);
 
 /**
  * @swagger
+ * /memories/status/draft:
+ *   get:
+ *     summary: Lấy danh sách kỷ niệm có status = "Nháp" của user hiện tại
+ *     tags: [Memories]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Danh sách kỷ niệm Nháp của user hiện tại
+ *       401:
+ *         description: Không có hoặc token không hợp lệ
+ */
+router.get(
+  '/status/draft',
+  authMiddleware,
+  memoryController.getDraftMemories
+);
+
+/**
+ * @swagger
+ * /memories/status/completed:
+ *   get:
+ *     summary: Lấy danh sách kỷ niệm có status = "Hoàn thành" (public, không cần token)
+ *     tags: [Memories]
+ *     security: []
+ *     responses:
+ *       200:
+ *         description: Danh sách kỷ niệm Hoàn thành
+ */
+router.get('/status/completed', memoryController.getCompletedMemories);
+
+/**
+ * @swagger
  * /memories/history:
  *   get:
  *     summary: Lịch sử các kỷ niệm do user hiện tại đã tạo
@@ -114,7 +147,7 @@ router.get('/history', authMiddleware, memoryController.getMyMemoriesHistory);
  * @swagger
  * /memories/dashboard:
  *   get:
- *     summary: Thống kê tổng quan kỷ niệm (dashboard) cho user hiện tại
+ *     summary: Thống kê tổng quan kỷ niệm (dashboard) cho user hiện tại (bao gồm số Nháp và Hoàn thành)
  *     tags: [Memories]
  *     security:
  *       - bearerAuth: []
@@ -135,7 +168,7 @@ router.get('/history', authMiddleware, memoryController.getMyMemoriesHistory);
  *         description: Ngày kết thúc (YYYY-MM-DD) khi muốn giới hạn khoảng thời gian thống kê
  *     responses:
  *       200:
- *         description: Thống kê tổng số, theo trạng thái và theo tháng
+ *         description: Thống kê tổng số, số Nháp, số Hoàn thành, theo trạng thái và theo tháng
  *       401:
  *         description: Không có hoặc token không hợp lệ
  */
