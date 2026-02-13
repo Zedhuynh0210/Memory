@@ -1,5 +1,6 @@
 const jwt = require("jsonwebtoken");
 const Auth = require("../model/Auth");
+const { uploadFromBuffer } = require("../utils/cloudinary");
 
 const JWT_SECRET = process.env.JWT_SECRET;
 
@@ -82,19 +83,18 @@ exports.updateAvatar = async (req, res) => {
       .json({ message: "Unauthorized - missing user from token" });
   }
 
-  if (!req.file) {
+  if (!req.file || !req.file.buffer) {
     return res
       .status(400)
       .json({ message: "Thiếu file avatar (multipart/form-data, field name: avatar)" });
   }
 
-  // Đường dẫn public để client có thể truy cập ảnh
-  const avatarPath = `/uploads/avatars/${req.file.filename}`;
-
   try {
+    const avatarUrl = await uploadFromBuffer(req.file.buffer, { folder: "avatars" });
+
     const user = await Auth.findByIdAndUpdate(
       userId,
-      { avatar: avatarPath },
+      { avatar: avatarUrl },
       { new: true }
     );
 

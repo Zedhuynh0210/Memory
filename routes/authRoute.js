@@ -1,21 +1,10 @@
 var express = require('express');
 var router = express.Router();
-const path = require('path');
 const multer = require('multer');
 const authController = require('../controller/authController');
 const authMiddleware = require('../middleware/auth');
 
-// Cấu hình multer để upload avatar vào thư mục public/uploads/avatars
-const avatarStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', 'public', 'uploads', 'avatars'));
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname) || '.png';
-    cb(null, Date.now() + '-' + file.fieldname + ext);
-  }
-});
-
+// Multer memory storage: file vào req.file.buffer, sau đó upload lên Cloudinary
 const avatarFileFilter = (req, file, cb) => {
   if (file.mimetype && file.mimetype.startsWith('image/')) {
     cb(null, true);
@@ -25,7 +14,7 @@ const avatarFileFilter = (req, file, cb) => {
 };
 
 const uploadAvatar = multer({
-  storage: avatarStorage,
+  storage: multer.memoryStorage(),
   fileFilter: avatarFileFilter,
   limits: { fileSize: 5 * 1024 * 1024 } // 5MB
 });

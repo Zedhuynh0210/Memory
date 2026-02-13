@@ -1,6 +1,7 @@
 const Memory = require("../model/Memory");
 const fs = require("fs");
 const path = require("path");
+const { uploadFromBuffer } = require("../utils/cloudinary");
 
 // POST /memories
 // Tạo kỷ niệm mới, upload NHIỀU ảnh và lưu đường dẫn vào imageUrls
@@ -28,11 +29,13 @@ exports.createMemory = async (req, res) => {
     });
   }
 
-  const imageUrls = req.files.map(
-    (file) => `/uploads/memories/${file.filename}`
-  );
-
   try {
+    const imageUrls = await Promise.all(
+      req.files.map((file) =>
+        uploadFromBuffer(file.buffer, { folder: "memories" })
+      )
+    );
+
     const memory = await Memory.create({
       title,
       description,
@@ -314,28 +317,14 @@ exports.updateMemory = async (req, res) => {
     if (mood !== undefined) memory.mood = mood;
     if (status !== undefined) memory.status = status;
 
-    // Nếu có upload nhiều ảnh mới, thay toàn bộ danh sách ảnh và xoá hết file ảnh cũ
+    // Nếu có upload nhiều ảnh mới, upload lên Cloudinary và thay toàn bộ imageUrls
     if (req.files && req.files.length > 0) {
-      const oldImageUrls = Array.isArray(memory.imageUrls)
-        ? memory.imageUrls
-        : [];
-
-      const newImageUrls = req.files.map(
-        (file) => `/uploads/memories/${file.filename}`
+      const newImageUrls = await Promise.all(
+        req.files.map((file) =>
+          uploadFromBuffer(file.buffer, { folder: "memories" })
+        )
       );
       memory.imageUrls = newImageUrls;
-
-      // Xoá toàn bộ file ảnh cũ
-      oldImageUrls.forEach((url) => {
-        if (url && url.startsWith("/uploads/memories/")) {
-          const fullPath = path.join(__dirname, "..", "public", url);
-          fs.unlink(fullPath, (err) => {
-            if (err) {
-              console.warn("Không xoá được file ảnh cũ:", err.message);
-            }
-          });
-        }
-      });
     }
 
     // Cập nhật createdAt theo thời điểm hiện tại khi PUT
@@ -367,20 +356,18 @@ exports.deleteMemory = async (req, res) => {
       return res.status(404).json({ message: "Không tìm thấy kỷ niệm" });
     }
 
+    await Memory.findByIdAndDelete(id);
+
+    // Chỉ xoá file local nếu còn lưu đường dẫn cũ (/uploads/...); ảnh Cloudinary không xoá ở đây
     const imagePaths =
       Array.isArray(memory.imageUrls) && memory.imageUrls.length > 0
         ? memory.imageUrls
         : [];
-
-    await Memory.findByIdAndDelete(id);
-
     imagePaths.forEach((url) => {
       if (url && url.startsWith("/uploads/memories/")) {
         const fullPath = path.join(__dirname, "..", "public", url);
         fs.unlink(fullPath, (err) => {
-          if (err) {
-            console.warn("Không xoá được file ảnh:", err.message);
-          }
+          if (err) console.warn("Không xoá được file ảnh:", err.message);
         });
       }
     });

@@ -1,21 +1,10 @@
 var express = require('express');
 var router = express.Router();
-const path = require('path');
 const multer = require('multer');
 const memoryController = require('../controller/memoryController');
 const authMiddleware = require('../middleware/auth');
 
-// Cấu hình multer để upload ảnh kỷ niệm vào thư mục public/uploads/memories
-const memoryStorage = multer.diskStorage({
-  destination: function (req, file, cb) {
-    cb(null, path.join(__dirname, '..', 'public', 'uploads', 'memories'));
-  },
-  filename: function (req, file, cb) {
-    const ext = path.extname(file.originalname) || '.png';
-    cb(null, Date.now() + '-' + file.fieldname + ext);
-  }
-});
-
+// Multer memory storage: files vào req.files[].buffer, sau đó upload lên Cloudinary
 const memoryFileFilter = (req, file, cb) => {
   if (file.mimetype && file.mimetype.startsWith('image/')) {
     cb(null, true);
@@ -25,7 +14,7 @@ const memoryFileFilter = (req, file, cb) => {
 };
 
 const uploadMemoryImage = multer({
-  storage: memoryStorage,
+  storage: multer.memoryStorage(),
   fileFilter: memoryFileFilter,
   limits: { fileSize: 10 * 1024 * 1024 } // 10MB
 });
