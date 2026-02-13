@@ -22,19 +22,16 @@ exports.createMemory = async (req, res) => {
     });
   }
 
-  if (!req.files || req.files.length === 0) {
-    return res.status(400).json({
-      message:
-        "Thiếu file ảnh kỷ niệm (multipart/form-data, field name: images)",
-    });
-  }
-
   try {
-    const imageUrls = await Promise.all(
-      req.files.map((file) =>
-        uploadFromBuffer(file.buffer, { folder: "memories" })
-      )
-    );
+    // Upload ảnh lên Cloudinary nếu có, nếu không thì imageUrls = []
+    let imageUrls = [];
+    if (req.files && req.files.length > 0) {
+      imageUrls = await Promise.all(
+        req.files.map((file) =>
+          uploadFromBuffer(file.buffer, { folder: "memories" })
+        )
+      );
+    }
 
     const memory = await Memory.create({
       title,

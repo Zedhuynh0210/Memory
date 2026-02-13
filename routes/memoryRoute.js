@@ -23,7 +23,7 @@ const uploadMemoryImage = multer({
  * @swagger
  * /memories:
  *   post:
- *     summary: Tạo kỷ niệm mới (upload nhiều ảnh)
+ *     summary: Tạo kỷ niệm mới (có thể upload nhiều ảnh hoặc không)
  *     tags: [Memories]
  *     security:
  *       - bearerAuth: []
@@ -36,7 +36,6 @@ const uploadMemoryImage = multer({
  *             required:
  *               - title
  *               - description
- *               - images
  *             properties:
  *               title:
  *                 type: string
@@ -55,6 +54,7 @@ const uploadMemoryImage = multer({
  *                 items:
  *                   type: string
  *                   format: binary
+ *                 description: Ảnh kỷ niệm (tùy chọn, có thể không có)
  *     responses:
  *       201:
  *         description: Tạo kỷ niệm thành công
