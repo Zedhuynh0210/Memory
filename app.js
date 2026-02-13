@@ -40,7 +40,7 @@ if (!process.env.MONGO_URI) {
 
 const corsOptions = {
   // Khi deploy: set FRONTEND_URL trên Render, ví dụ https://my-frontend.onrender.com
-  origin: process.env.FRONTEND_URL || 'http://localhost:5173', 
+  origin: process.env.FRONTEND_URL, 
   methods: 'GET,HEAD,PUT,PATCH,POST,DELETE',
   credentials: true,
   optionsSuccessStatus: 204,
