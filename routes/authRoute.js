@@ -75,6 +75,22 @@ router.get('/profile', authMiddleware, authController.getProfile);
 
 /**
  * @swagger
+ * /auth/logout:
+ *   post:
+ *     summary: Đăng xuất (yêu cầu token hợp lệ)
+ *     tags: [Auth]
+ *     security:
+ *       - bearerAuth: []
+ *     responses:
+ *       200:
+ *         description: Đăng xuất thành công
+ *       401:
+ *         description: Không có hoặc token không hợp lệ
+ */
+router.post('/logout', authMiddleware, authController.logout);
+
+/**
+ * @swagger
  * /auth/avatar:
  *   put:
  *     summary: Cập nhật avatar cho tài khoản đang đăng nhập (dựa trên token), upload file ảnh

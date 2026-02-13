@@ -72,6 +72,16 @@ exports.getProfile = async (req, res) => {
   });
 };
 
+// POST /auth/logout
+// Đăng xuất (với JWT stateless, chỉ cần trả về success, frontend sẽ xóa token)
+exports.logout = async (req, res) => {
+  // Với JWT stateless, logout chỉ cần trả về success
+  // Frontend sẽ xóa token khỏi localStorage/sessionStorage
+  return res.json({
+    message: "Đăng xuất thành công",
+  });
+};
+
 // PUT /auth/avatar
 // Cập nhật avatar cho tài khoản đang đăng nhập (dựa trên token), nhận file upload
 exports.updateAvatar = async (req, res) => {
