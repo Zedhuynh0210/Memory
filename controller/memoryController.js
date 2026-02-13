@@ -338,6 +338,9 @@ exports.updateMemory = async (req, res) => {
       });
     }
 
+    // Cập nhật createdAt theo thời điểm hiện tại khi PUT
+    memory.createdAt = new Date();
+
     await memory.save();
 
     return res.json({
